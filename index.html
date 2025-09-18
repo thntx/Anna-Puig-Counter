@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <title>Comptadors amb Chiclin i Combo</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      font-family: Arial, sans-serif;
+      color: white;
+      overflow: hidden;
+    }
+    .counter {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .no { background-color: #e74c3c; }
+    .si { background-color: #27ae60; }
+    .vale { background-color: #2980b9; }
+    .dacord { background-color: #f39c12; }
+    .label { margin-bottom: 20px; font-weight: bold; font-size: 2em; z-index: 2; position: relative; }
+    .number { font-size: 6em; font-weight: bold; z-index: 2; position: relative; display: inline-block; }
+    .combo {
+      position: absolute; font-size: 1.5em; font-weight: bold; transform: rotate(-30deg) scale(1); color: #fff; z-index:2; opacity:0;
+      transition: opacity 0.3s, transform 0.3s; pointer-events:none; transform-origin: left bottom;
+    }
+    .combo.show { opacity:1; transform: rotate(-30deg) scale(1); }
+    /* Animació combo pop */
+    @keyframes comboPop {
+      0% { transform: rotate(-30deg) scale(1); }
+      50% { transform: rotate(-30deg) scale(1.8); }
+      100% { transform: rotate(-30deg) scale(1); }
+    }
+    .combo.pop {
+      animation: comboPop 0.3s ease-out;
+    }
+    .combo.hide {
+      opacity: 0;
+      transform: rotate(-30deg) scale(0.5);
+    }
+    #infoBtn {
+      position: fixed; top: 15px; right: 15px;
+      background: #333; color: white; border: none; border-radius: 50%;
+      width: 35px; height: 35px; font-size: 18px; cursor: pointer; font-weight: bold;
+      display: flex; align-items: center; justify-content: center; transition: background 0.3s; z-index: 2000;
+    }
+    #infoBtn:hover { background: #555; }
+    #infoBox {
+      display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: white; color: #333; padding: 25px 30px; border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.3); max-width: 350px; text-align: left; z-index: 3000; line-height: 1.6;
+    }
+    #infoBox h2 { margin-top:0; font-size:1.4em; margin-bottom:15px; color:#222; }
+    #infoBox ul { padding-left:20px; }
+    #infoBox li { margin-bottom:10px; }
+    #closeInfo { position:absolute; top:8px; right:12px; background:none; border:none; font-size:18px; cursor:pointer; color:#888; transition:color 0.3s; }
+    #closeInfo:hover { color:#000; }
+
+    /* Animació chiclin */
+    @keyframes chiclin {
+      0% { transform: scale(1) rotate(0deg); }
+      30% { transform: scale(1.4) rotate(15deg); }
+      60% { transform: scale(0.9) rotate(-10deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="counter no">
+  <div class="label">No?</div>
+  <div id="countNo" class="number">0</div>
+  <div id="comboNo" class="combo"></div>
+</div>
+<div class="counter si">
+  <div class="label">Sí?</div>
+  <div id="countSi" class="number">0</div>
+  <div id="comboSi" class="combo"></div>
+</div>
+<div class="counter vale">
+  <div class="label">Vale?</div>
+  <div id="countVale" class="number">0</div>
+  <div id="comboVale" class="combo"></div>
+</div>
+<div class="counter dacord">
+  <div class="label">D'acord?</div>
+  <div id="countDacord" class="number">0</div>
+  <div id="comboDacord" class="combo"></div>
+</div>
+
+<button id="infoBtn">i</button>
+<div id="infoBox">
+  <button id="closeInfo">✖</button>
+  <h2>Controls</h2>
+  <ul>
+    <li><b>Espai</b> → +1 No?</li>
+    <li><b>Z</b> → +1 Sí?</li>
+    <li><b>X</b> → +1 Vale?</li>
+    <li><b>C</b> → +1 D'acord?</li>
+    <li><b>Shift + tecla</b> → -1</li>
+    <li><b>Shift + Supr/Backspace</b> → Reinicia tots</li>
+    <li><b>Combo</b> → increments repetits en 5s al mateix comptador</li>
+  </ul>
+</div>
+
+<script>
+  const counters = {
+    Space: document.getElementById("countNo"),
+    KeyZ: document.getElementById("countSi"),
+    KeyX: document.getElementById("countVale"),
+    KeyC: document.getElementById("countDacord"),
+  };
+
+  const combos = {
+    Space: { el: document.getElementById("comboNo"), count: 0, timer: null, emoji: '🔥' },
+    KeyZ: { el: document.getElementById("comboSi"), count: 0, timer: null, emoji: '🍀' },
+    KeyX: { el: document.getElementById("comboVale"), count: 0, timer: null, emoji: '💦' },
+    KeyC: { el: document.getElementById("comboDacord"), count: 0, timer: null, emoji: '✨' },
+  };
+
+  // Cookies
+  function setCookie(name, value, days = 365) {
+    const d = new Date();
+    d.setTime(d.getTime() + (days*24*60*60*1000));
+    document.cookie = name + "=" + value + ";expires=" + d.toUTCString() + ";path=/";
+  }
+  function getCookie(name) {
+    const cookies = document.cookie.split("; ");
+    for (let c of cookies) {
+      const [key, val] = c.split("=");
+      if (key === name) return val;
+    }
+    return null;
+  }
+  function deleteCookie(name) {
+    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;";
+  }
+
+  // Carregar cookies
+  for (const code in counters) {
+    const saved = getCookie(code);
+    if (saved !== null) counters[code].textContent = saved;
+  }
+
+  // Funció chiclin (només per número del comptador)
+  function applyChiclin(element) {
+    element.style.animation = "none";
+    void element.offsetWidth; // reflow
+    element.style.animation = "chiclin 0.5s ease";
+  }
+
+  // Funció per animar el combo
+  function animateCombo(comboEl) {
+    // Elimina l'animació anterior si n'hi ha
+    comboEl.classList.remove("pop");
+
+    // Força un reflow per assegurar que l'animació es reprodueixi
+    void comboEl.offsetWidth;
+
+    // Afegeix la classe amb l'animació
+    comboEl.classList.add("pop");
+  }
+
+  // Funció per amagar el combo amb animació
+  function hideCombo(combo) {
+    combo.el.classList.add("hide");
+
+    // Espera a que acabi l'animació per amagar-lo completament
+    setTimeout(() => {
+      combo.count = 0;
+      combo.el.textContent = "";
+      combo.el.classList.remove("show", "hide");
+    }, 300); // Temps igual que la transició CSS
+  }
+
+  document.addEventListener("keydown", (event) => {
+    // Reinici
+    if (event.shiftKey && (event.code === "Backspace" || event.code === "Delete")) {
+      for (const code in counters) {
+        counters[code].textContent = 0;
+        deleteCookie(code);
+        // Amaga el combo amb animació
+        hideCombo(combos[code]);
+        if (combos[code].timer) clearTimeout(combos[code].timer);
+      }
+      return;
+    }
+
+    if (counters[event.code] !== undefined) {
+      let current = parseInt(counters[event.code].textContent,10);
+      if (event.shiftKey) {
+        current = Math.max(0,current-1);
+      } else {
+        current++;
+
+        const combo = combos[event.code];
+        combo.count++;
+
+        // Mostra el combo només si >= 2
+        if(combo.count >= 2) {
+          combo.el.textContent = "x" + combo.count;
+          combo.el.classList.remove("hide");
+          combo.el.classList.add("show");
+          const numEl = counters[event.code];
+          const offsetLeft = numEl.offsetLeft + numEl.offsetWidth + 5; // marge 5px
+          combo.el.style.left = offsetLeft + "px";
+          combo.el.style.top = numEl.offsetTop + "px";
+
+          // Aplica l'animació al combo
+          animateCombo(combo.el);
+        } else {
+          combo.el.textContent = "";
+          combo.el.classList.remove("show");
+        }
+
+        if (combo.timer) clearTimeout(combo.timer);
+        combo.timer = setTimeout(() => {
+          hideCombo(combo);
+        }, 5000);
+
+        // Emoji darrere - CORRECCIÓ: centrar perfectament
+        const emojiEl = document.createElement("div");
+        emojiEl.textContent = combo.emoji;
+        const size = 60 + Math.random()*60;
+        emojiEl.style.position = "absolute";
+
+        // Calcular la posició X centrada tenint en compte l'amplada de l'emoji
+        const parentWidth = counters[event.code].parentElement.clientWidth;
+        const emojiWidth = size; // Aproximació de l'amplada de l'emoji
+        const maxLeft = parentWidth - emojiWidth;
+        const randomLeft = Math.random() * maxLeft;
+
+        emojiEl.style.left = randomLeft + "px";
+        emojiEl.style.bottom = "0px";
+        emojiEl.style.fontSize = size + "px";
+        emojiEl.style.pointerEvents = "none";
+        emojiEl.style.transform = "rotate(0deg)";
+        emojiEl.style.transition = "transform 2.5s linear, bottom 2.5s linear";
+        emojiEl.style.zIndex = "0";
+        counters[event.code].parentElement.appendChild(emojiEl);
+
+        requestAnimationFrame(()=>{
+          emojiEl.style.bottom = "100%";
+          const rotateDeg = 360 + Math.random()*360;
+          emojiEl.style.transform = `rotate(${rotateDeg}deg)`;
+        });
+        setTimeout(()=>{ emojiEl.remove(); },2500);
+
+        // Chiclin al número del comptador
+        applyChiclin(counters[event.code]);
+      }
+
+      counters[event.code].textContent = current;
+      setCookie(event.code,current);
+    }
+  });
+
+  // Informació
+  const infoBtn = document.getElementById("infoBtn");
+  const infoBox = document.getElementById("infoBox");
+  const closeInfo = document.getElementById("closeInfo");
+  infoBtn.addEventListener("click",()=>{infoBox.style.display="block";});
+  closeInfo.addEventListener("click",()=>{infoBox.style.display="none";});
+</script>
+</body>
+</html>
