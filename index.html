@@ -35,10 +35,10 @@
     .si { background-color: #27ae60; }
     .vale { background-color: #2980b9; }
     .dacord { background-color: #f39c12; }
-    .label { margin-bottom: 20px; font-weight: bold; font-size: 2em; z-index: 2; position: relative; }
-    .number { font-size: 6em; font-weight: bold; z-index: 2; position: relative; display: inline-block; }
+    .label { margin-bottom: 30px; font-weight: bold; font-size: 3em; z-index: 2; position: relative; }
+    .number { font-size: 9em; font-weight: bold; z-index: 2; position: relative; display: inline-block; }
     .combo {
-      position: absolute; font-size: 1.5em; font-weight: bold; transform: rotate(-30deg) scale(1); color: #fff; z-index:2; opacity:0;
+      position: absolute; font-size: 2.25em; font-weight: bold; transform: rotate(-30deg) scale(1); color: #fff; z-index:2; opacity:0;
       transition: opacity 0.3s, transform 0.3s; pointer-events:none; transform-origin: left bottom;
     }
     .combo.show { opacity:1; transform: rotate(-30deg) scale(1); }
@@ -55,21 +55,21 @@
       transform: rotate(-30deg) scale(0.5);
     }
     #infoBtn {
-      position: fixed; top: 15px; right: 15px;
+      position: fixed; top: 20px; right: 20px;
       background: #333; color: white; border: none; border-radius: 50%;
-      width: 35px; height: 35px; font-size: 18px; cursor: pointer; font-weight: bold;
+      width: 53px; height: 53px; font-size: 27px; cursor: pointer; font-weight: bold;
       display: flex; align-items: center; justify-content: center; transition: background 0.3s; z-index: 2000;
     }
     #infoBtn:hover { background: #555; }
     #infoBox {
       display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      background: white; color: #333; padding: 25px 30px; border-radius: 12px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.3); max-width: 350px; text-align: left; z-index: 3000; line-height: 1.6;
+      background: white; color: #333; padding: 38px 45px; border-radius: 18px;
+      box-shadow: 0 9px 27px rgba(0,0,0,0.3); max-width: 525px; text-align: left; z-index: 3000; line-height: 1.6;
     }
-    #infoBox h2 { margin-top:0; font-size:1.4em; margin-bottom:15px; color:#222; }
-    #infoBox ul { padding-left:20px; }
-    #infoBox li { margin-bottom:10px; }
-    #closeInfo { position:absolute; top:8px; right:12px; background:none; border:none; font-size:18px; cursor:pointer; color:#888; transition:color 0.3s; }
+    #infoBox h2 { margin-top:0; font-size:2.1em; margin-bottom:23px; color:#222; }
+    #infoBox ul { padding-left:30px; font-size:1.5em; }
+    #infoBox li { margin-bottom:15px; }
+    #closeInfo { position:absolute; top:12px; right:18px; background:none; border:none; font-size:27px; cursor:pointer; color:#888; transition:color 0.3s; }
     #closeInfo:hover { color:#000; }
     @keyframes chiclin {
       0% { transform: scale(1) rotate(0deg); }
@@ -80,15 +80,15 @@
     #resetMobileBtn {
       display: none;
       position: fixed;
-      top: 15px;
-      left: 15px;
+      top: 20px;
+      left: 20px;
       background: #333;
       color: white;
       border: none;
       border-radius: 50%;
-      width: 38px;
-      height: 38px;
-      font-size: 20px;
+      width: 57px;
+      height: 57px;
+      font-size: 30px;
       cursor: pointer;
       font-weight: bold;
       z-index: 2000;
@@ -269,7 +269,7 @@
 
         const emojiEl = document.createElement("div");
         emojiEl.textContent = combo.emoji;
-        const size = 60 + Math.random()*60;
+        const size = 90 + Math.random()*90;
         emojiEl.style.position = "absolute";
         const parentWidth = counters[event.code].parentElement.clientWidth;
         const maxLeft = parentWidth - size;
